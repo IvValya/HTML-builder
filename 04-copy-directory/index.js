@@ -1,19 +1,55 @@
 const fs = require('fs');
 const path = require('path');
+const fsPromises = require('fs/promises');
 
-fs.mkdir(path.join(__dirname, 'files-copy'),
-  { recursive: true }, (err) => {
+(function  copyDir () {
+   fs.rm(path.join(__dirname, 'files-copy'), { recursive: true, force: true}, (err) => {
+    fs.mkdir(path.join(__dirname, 'files-copy'),
+    { recursive: true },  (err) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+    srcPath = path.join(__dirname, '/files/');
+    destPath = path.join(__dirname, '/files-copy/');
+
+    copyFromDir(srcPath, destPath);
+    function copyFromDir (src, dest) {
+        fs.readdir(path.join(src), { withFileTypes: true }, (err, files) => {
+          if (err) throw err;
+          files.forEach((item) => {
+            srcPath = path.join (src, item.name);
+            destPath = path.join (dest, item.name);
+            if (!item.isDirectory()) {
+              
+              copyFile (srcPath, destPath);
+            }
+            else {              
+              fs.mkdir(destPath,
+              { recursive: true },  (err) => {
+                if (err) {
+                  console.log("Error Found:", err);
+                }
+              });
+             copyFromDir(srcPath, destPath);
+            }
+            
+          });
+        });
+      }}); 
+
+})();
+
+function copyFile (src, dest) {
+  fs.copyFile(src, dest, (err) => {
     if (err) {
       console.log("Error Found:", err);
-    }
+    };
   });
-  fs.readdir(path.join(__dirname, '/files/'), 'utf-8', (err, files) => {
-    if (err) throw err;
-    files.forEach((item) => {
-      fs.copyFile(path.join(__dirname, '/files/', item), path.join(__dirname, '/files-copy/', item), (err) => {
-        if (err) {
-          console.log("Error Found:", err);
-        };
-      });
-    })
-  });
+}
+
+
+ 
+
+
+  
